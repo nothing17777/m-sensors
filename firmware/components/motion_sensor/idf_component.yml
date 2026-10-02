@@ -1,0 +1,6 @@
+description: M camera-based motion sensor
+dependencies:
+  idf: ">=5.1"
+  espressif/esp32-camera:
+    version: "^2.0.10"
+    require: public

@@ -1,0 +1,10 @@
+__pycache__/
+.pytest_cache/
+.venv/
+firmware/build/
+firmware/managed_components/
+firmware/dependencies.lock
+firmware/sdkconfig
+firmware/sdkconfig.old
+firmware/host_test/build/
+*.avi

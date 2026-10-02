@@ -1,0 +1,4 @@
+numpy>=1.24
+opencv-python>=4.8,<5  # OpenCV 5 moved CascadeClassifier (face detection) out of the main package
+requests>=2.31
+pytest>=7.0
