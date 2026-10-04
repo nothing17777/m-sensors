@@ -107,19 +107,13 @@ Expected console output when you walk in and face the camera:
 A `SUMMARY` line on exit shows scan count and EchoAi latency (avg / p95).
 
 ### Switching to the live EchoAi API
-The API is the `project-m-emotion-api` Flask wrapper IPMD shared (SJSU-sponsored project), run
-on a Linux machine per that repo's own README (`bash install.sh`, then `python emotion_api.py`).
-Point this prototype at it:
-1. `$env:ECHOAI_URL="http://<that machine's IP>:8080"` — no output = set.
-2. `$env:ECHOAI_API_KEY="<key, if the deployment requires one>"` — no output = set.
+1. `$env:ECHOAI_URL="<endpoint from IPMD>"` — no output = set.
+2. `$env:ECHOAI_API_KEY="<key>"` — no output = set.
 3. `python main.py --provider echoai`
 
-`EchoAiProvider` posts the face crop to `<ECHOAI_URL>/analyze` and reads back
-`{"ok", "faceDetected", "rawEmotion", "confidence", ...}`; `rawEmotion` feeds our own
-`EMOTION_TO_MOOD` table (`response_map.py`) rather than trusting the API's own `mood` field, so
-the PC prototype and `expression.c` stay the single source of truth for the mood mapping. Also
-confirm the input image size (`face_crop_size` in `config.py`, currently 224×224 JPEG) matches
-what that API's model expects.
+The request/response format is unknown until IPMD sends API docs. Only two methods need editing:
+`EchoAiProvider._build_request` and `EchoAiProvider._parse_response` in `emotion_providers.py`
+(marked `TODO(API docs)`). Also confirm the input image size (`face_crop_size` in `config.py`, currently 224×224 JPEG).
 
 If EchoAi errors or WiFi drops, the console shows `EchoAi error -> offline fallback`. The lights keep working
 in Auto-Response mode, and uploads retry after 10 s.
@@ -216,12 +210,10 @@ after someone leaves, motion ends within ~3 s + `quiet_ms`.
    sad->Sad, angry/surprised/fearful/disgusted->Dynamic. `EMOTION_TABLE` keeps one entry per
    emotion so existing callers/tests are unaffected, but the four Dynamic emotions now share
    the identical look. Host tests (`firmware/host_test`) still pass.
-2. **Live EchoAi API — done (PC prototype).** `EchoAiProvider` in `emotion_providers.py` now
-   calls `project-m-emotion-api`'s `/analyze` endpoint and parses its
-   `{ok, faceDetected, rawEmotion, confidence, scores}` response; see "Switching to the live
-   EchoAi API" above. The ESP32 firmware side is still the `DEMO_FAKE_EMOTIONS` placeholder in
-   `main.c` — wiring an HTTP client into the firmware to call the same API is follow-up work,
-   not done here.
+2. **Live EchoAi API — blocked.** The EchoAi API docs haven't arrived yet. `emotion_providers.py`
+   already has an `EchoAiProvider` scaffold with the only two methods that need editing
+   (`_build_request` / `_parse_response`) marked `TODO(API docs)`; swap `DEMO_FAKE_EMOTIONS`
+   / the mock provider for it once the docs land.
 3. **Hardware touch test — blocked.** No MPR121 is wired to this machine, so gestures could
    only be exercised via the PC prototype's synthetic/replay tooling
    (`pc_prototype/run_touch.py`, `tools/parity_touch.py`), not real hardware. Needs the touch
