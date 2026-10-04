@@ -1,9 +1,13 @@
 """Swappable emotion providers (Build Plan §3: provider-based EchoAi integration).
 
 - MockProvider:   works today, no API access needed (keyboard / cycling labels)
-- EchoAiProvider: live EchoAi service. IPMD has not sent API docs yet, so the
-                  request/response format is isolated in two methods marked
-                  TODO(API docs) — only those need editing when docs arrive.
+- EchoAiProvider: live EchoAi service, per the project-m-emotion-api Flask
+                  wrapper IPMD shared (POST <ECHOAI_URL>/analyze, multipart
+                  "image" field; see that repo's README for the response
+                  shape). Our own EMOTION_TO_MOOD table (response_map.py)
+                  still does the emotion->mood remap, so the firmware and
+                  PC prototype stay the single source of truth for it even
+                  though the API's /moods endpoint also reports one.
 
 EmotionWorker runs the provider off the video loop so a slow or offline
 network never freezes the LEDs (Build Plan §3: "the demo never stalls").
@@ -75,27 +79,27 @@ class EchoAiProvider(EmotionProvider):
     def analyze(self, face_jpeg: bytes) -> EmotionResult:
         t0 = time.perf_counter()
         kwargs = self._build_request(face_jpeg)
-        resp = self._session.post(self.url, timeout=self.timeout_s, **kwargs)
+        resp = self._session.post(f"{self.url.rstrip('/')}/analyze", timeout=self.timeout_s, **kwargs)
         resp.raise_for_status()
         latency_ms = (time.perf_counter() - t0) * 1000
         return self._parse_response(resp.json(), latency_ms)
 
-    # ---- TODO(API docs): the only two methods to adapt to the real EchoAi API ----
     def _build_request(self, face_jpeg: bytes) -> dict:
         headers = {"Authorization": f"Bearer {self.api_key}"} if self.api_key else {}
         return {"headers": headers, "files": {"image": ("face.jpg", face_jpeg, "image/jpeg")}}
 
     def _parse_response(self, data: dict, latency_ms: float) -> EmotionResult:
-        # Accepts {"emotion": "happy", "confidence": 0.8, "intensity": 0.6}
-        # or      {"emotions": {"happy": 0.8, "sad": 0.1, ...}}
-        if "emotions" in data and isinstance(data["emotions"], dict) and data["emotions"]:
-            label, conf = max(data["emotions"].items(), key=lambda kv: float(kv[1]))
-        else:
-            label = data.get("emotion") or data.get("label") or "neutral"
-            conf = data.get("confidence", data.get("score", 0.0))
-        conf = float(conf)
-        intensity = float(data.get("intensity", conf))
-        return EmotionResult(str(label), conf, max(0.0, min(1.0, intensity)), latency_ms, data)
+        # project-m-emotion-api /analyze shape:
+        # {"ok": true, "faceDetected": true, "rawEmotion": "Happy", "mood": "Warm",
+        #  "confidence": 0.89, "scores": {...}, "provider": "emotion_local"}
+        if not data.get("ok", True):
+            raise RuntimeError(data.get("error", "EchoAi /analyze returned ok=false"))
+        if not data.get("faceDetected", True):
+            return EmotionResult("neutral", 0.0, 0.0, latency_ms, data)
+        label = str(data.get("rawEmotion") or data.get("emotion") or "neutral").lower()
+        confidence = max(0.0, min(1.0, float(data.get("confidence", 0.0))))
+        intensity = float(data.get("intensity", confidence))
+        return EmotionResult(label, confidence, max(0.0, min(1.0, intensity)), latency_ms, data)
 
 
 class EmotionWorker:
