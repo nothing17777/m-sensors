@@ -210,10 +210,12 @@ after someone leaves, motion ends within ~3 s + `quiet_ms`.
    sad->Sad, angry/surprised/fearful/disgusted->Dynamic. `EMOTION_TABLE` keeps one entry per
    emotion so existing callers/tests are unaffected, but the four Dynamic emotions now share
    the identical look. Host tests (`firmware/host_test`) still pass.
-2. **Live EchoAi API — blocked.** The EchoAi API docs haven't arrived yet. `emotion_providers.py`
-   already has an `EchoAiProvider` scaffold with the only two methods that need editing
-   (`_build_request` / `_parse_response`) marked `TODO(API docs)`; swap `DEMO_FAKE_EMOTIONS`
-   / the mock provider for it once the docs land.
+2. **Live EchoAi API — blocked.** The `project-m-emotion-api` repo IPMD first linked turned out
+   to be packaged for the SJSU/Echo Show 8 partner team, not this touch project; IPMD confirmed
+   the mismatch on 2026-10-03 and asked to hold the integration until they send the correct
+   package. `emotion_providers.py` still has the `EchoAiProvider` scaffold with the two methods
+   that need editing (`_build_request` / `_parse_response`) marked `TODO(API docs)`; swap
+   `DEMO_FAKE_EMOTIONS` / the mock provider for it once the right docs/package land.
 3. **Hardware touch test — blocked.** No MPR121 is wired to this machine, so gestures could
    only be exercised via the PC prototype's synthetic/replay tooling
    (`pc_prototype/run_touch.py`, `tools/parity_touch.py`), not real hardware. Needs the touch
