@@ -203,3 +203,20 @@ after someone leaves, motion ends within ~3 s + `quiet_ms`.
 - Whether an actuator (the sketch's note) is in scope. The code already emits a haptic hint (`app_haptic()` on the
   robot, `expression.haptic` in Python), but the BOM has no motor.
 - Consent/retention guidance for face crops used in demos.
+
+## Oct 9 assignment status (per Min Lee's 2026-10-02 review)
+1. **4-mood remap — done.** `response_map.py` and `expression.c` now route all 7 detector
+   emotions through a `Mood` table (Warm, Sad, Calm, Dynamic): neutral->Calm, happy->Warm,
+   sad->Sad, angry/surprised/fearful/disgusted->Dynamic. `EMOTION_TABLE` keeps one entry per
+   emotion so existing callers/tests are unaffected, but the four Dynamic emotions now share
+   the identical look. Host tests (`firmware/host_test`) still pass.
+2. **Live EchoAi API — blocked.** The EchoAi API docs haven't arrived yet. `emotion_providers.py`
+   already has an `EchoAiProvider` scaffold with the only two methods that need editing
+   (`_build_request` / `_parse_response`) marked `TODO(API docs)`; swap `DEMO_FAKE_EMOTIONS`
+   / the mock provider for it once the docs land.
+3. **Hardware touch test — blocked.** No MPR121 is wired to this machine, so gestures could
+   only be exercised via the PC prototype's synthetic/replay tooling
+   (`pc_prototype/run_touch.py`, `tools/parity_touch.py`), not real hardware. Needs the touch
+   board wired up to verify on-device.
+4. **Push — done,** to this repo (`m-sensors`) per instruction; not pushed to the IPMD
+   central repo.

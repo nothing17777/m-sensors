@@ -16,16 +16,25 @@
 #define NIGHT_SPEED_SCALE    0.6f
 
 /* DRAFT Emotion Mapping Table (Phase 1 deliverable) - confirm with IPMD.
- * Angry/fearful get soothing responses instead of being mirrored. */
+ * Per Min Lee's 2026-10-02 review, Robot M standardizes on four moods
+ * (Warm, Sad, Calm, Dynamic): neutral->Calm, happy->Warm, sad->Sad, and
+ * angry/surprised/fearful/disgusted all collapse into Dynamic, which stays a
+ * soothing wave rather than a jarring one - those four are meant to be
+ * calmed down, not mirrored. */
+#define MOOD_CALM    {LED_PATTERN_BREATHE,   0,   0,   0, 160,  90, 0.25f, 0, "ambient_01", HAPTIC_NONE}
+#define MOOD_WARM    {LED_PATTERN_SPARKLE, 255, 150,   0,  40, 170, 0.80f, 0, "bright_01",  HAPTIC_NONE}
+#define MOOD_SAD     {LED_PATTERN_BREATHE,  40,  80, 255,  20,  70, 0.15f, 0, "comfort_01", HAPTIC_NONE}
+#define MOOD_DYNAMIC {LED_PATTERN_WAVE,     170, 120, 255,  30, 110, 0.45f, 0, "calm_01",   HAPTIC_NONE}
+
 static const expression_t EMOTION_TABLE[EMOTION_COUNT] = {
-    /*                       pattern               R    G    B    W   bri  speed dir  music        */
-    [EMOTION_NEUTRAL]   = {LED_PATTERN_BREATHE,     0,   0,   0, 160,  90, 0.25f, 0, "ambient_01", HAPTIC_NONE},
-    [EMOTION_HAPPY]     = {LED_PATTERN_SPARKLE,   255, 150,   0,  40, 170, 0.80f, 0, "bright_01", HAPTIC_NONE},
-    [EMOTION_SAD]       = {LED_PATTERN_BREATHE,    40,  80, 255,  20,  70, 0.15f, 0, "comfort_01", HAPTIC_NONE},
-    [EMOTION_ANGRY]     = {LED_PATTERN_WAVE,      140,  60, 255,   0,  80, 0.20f, 0, "calm_01", HAPTIC_NONE},
-    [EMOTION_SURPRISED] = {LED_PATTERN_PULSE,     120, 200, 255,  60, 170, 1.20f, 0, "chime_01", HAPTIC_NONE},
-    [EMOTION_FEARFUL]   = {LED_PATTERN_BREATHE,   255, 110,  30,  60,  70, 0.15f, 0, "comfort_01", HAPTIC_NONE},
-    [EMOTION_DISGUSTED] = {LED_PATTERN_WAVE,       60, 200, 120,   0,  90, 0.30f, 0, "calm_01", HAPTIC_NONE},
+    /*                       mood           */
+    [EMOTION_NEUTRAL]   = MOOD_CALM,
+    [EMOTION_HAPPY]     = MOOD_WARM,
+    [EMOTION_SAD]       = MOOD_SAD,
+    [EMOTION_ANGRY]     = MOOD_DYNAMIC,
+    [EMOTION_SURPRISED] = MOOD_DYNAMIC,
+    [EMOTION_FEARFUL]   = MOOD_DYNAMIC,
+    [EMOTION_DISGUSTED] = MOOD_DYNAMIC,
 };
 
 /* Idle: a soft blink every four seconds, so the sphere reads as awake but quiet. */

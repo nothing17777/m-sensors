@@ -5,6 +5,12 @@ EMOTION_TABLE is a DRAFT of the Phase 1 "Emotion Mapping Table" deliverable —
 confirm colours/patterns with IPMD. Negative high-arousal emotions (angry,
 fearful) get soothing responses rather than being mirrored, since M
 is meant as a calming tool.
+
+Per Min Lee's 2026-10-02 review, Robot M standardizes on four moods
+(Warm, Sad, Calm, Dynamic). Each of the 7 detector emotions resolves to
+one mood's look via EMOTION_TO_MOOD; EMOTION_TABLE keeps one entry per
+emotion (for callers/tests keyed by emotion label) but entries for the
+same mood share the identical Expression.
 """
 from __future__ import annotations
 
@@ -99,16 +105,35 @@ AUTO_WARM = {
     Arousal.INTENSE: Expression(Pattern.RIPPLE, (255, 95, 10, 30), 180, 1.00, music="warm_01"),
 }
 
-EMOTION_TABLE = {
-    #            pattern            R    G    B    W   bri  speed  music
-    "neutral":   Expression(Pattern.BREATHE, (0, 0, 0, 160), 90, 0.25, music="ambient_01"),
-    "happy":     Expression(Pattern.SPARKLE, (255, 150, 0, 40), 170, 0.80, music="bright_01"),
-    "surprised": Expression(Pattern.PULSE, (120, 200, 255, 60), 170, 1.20, music="chime_01"),
-    "sad":       Expression(Pattern.BREATHE, (40, 80, 255, 20), 70, 0.15, music="comfort_01"),
-    "fearful":   Expression(Pattern.BREATHE, (255, 110, 30, 60), 70, 0.15, music="comfort_01"),
-    "angry":     Expression(Pattern.WAVE, (140, 60, 255, 0), 80, 0.20, music="calm_01"),
-    "disgusted": Expression(Pattern.WAVE, (60, 200, 120, 0), 90, 0.30, music="calm_01"),
+class Mood(str, Enum):
+    WARM = "warm"
+    SAD = "sad"
+    CALM = "calm"
+    DYNAMIC = "dynamic"
+
+
+# The 4-mood "look" table (DRAFT - confirm with IPMD). Dynamic stays a soothing
+# wave rather than a jarring one, since angry/fearful/surprised/disgusted are
+# meant to be calmed down, not mirrored.
+MOOD_TABLE = {
+    #          pattern            R    G    B    W   bri  speed  music
+    Mood.CALM:    Expression(Pattern.BREATHE, (0, 0, 0, 160), 90, 0.25, music="ambient_01"),
+    Mood.WARM:    Expression(Pattern.SPARKLE, (255, 150, 0, 40), 170, 0.80, music="bright_01"),
+    Mood.SAD:     Expression(Pattern.BREATHE, (40, 80, 255, 20), 70, 0.15, music="comfort_01"),
+    Mood.DYNAMIC: Expression(Pattern.WAVE, (170, 120, 255, 30), 110, 0.45, music="calm_01"),
 }
+
+EMOTION_TO_MOOD = {
+    "neutral":   Mood.CALM,
+    "happy":     Mood.WARM,
+    "sad":       Mood.SAD,
+    "angry":     Mood.DYNAMIC,
+    "surprised": Mood.DYNAMIC,
+    "fearful":   Mood.DYNAMIC,
+    "disgusted": Mood.DYNAMIC,
+}
+
+EMOTION_TABLE = {emotion: MOOD_TABLE[mood] for emotion, mood in EMOTION_TO_MOOD.items()}
 
 
 # Touch responses. The whiteboard sketch's "turn soft / warm": every touch answers warm.
